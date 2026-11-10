@@ -9,9 +9,32 @@ MODULE_DESCRIPTION("Our first dynamically loadable kernel module");
 
 #define PROC_NAME "hl_proc"
 
+static ssize_t	driver_read(struct file* file_ptr, 
+                            char __user* user_space_buffer, 
+                            size_t count, 
+                            loff_t* offset)
+{
+    pr_info("Read driver\n");
+    char message[] = "Hello from hailiang194\n";
+    size_t len = sizeof(message);
+
+    if(*offset >= len)
+        return 0;
+
+    if(copy_to_user(user_space_buffer, message, len))
+    {
+        pr_err("Failed to send the value to user space");
+        return -1;
+    }
+
+    *offset += len;
+
+    return len;
+}
+
 static struct proc_dir_entry* proc_entry;
 static struct proc_ops driver_ops = {
-
+    .proc_read = driver_read
 };
 
 static int __init hw_module_init(void)
